@@ -8,20 +8,26 @@ namespace Peliprojekti
 {
     internal class Unit
     {
-        public enum Status { Neutral, Dead };
+        public enum Status { Neutral, Dead, Shield, Charged };
 
         private Status status;
         private string name;
         private int attackPower;
+        private float attackMultiplier;
         private int hitPoints;
+        private int maxHealth;
+        private int mana;
 
         public Unit(string n, int a, int h)
         {
             name = n;
             attackPower = a;
             hitPoints = h;
+            maxHealth = h;
 
             status = Status.Neutral;
+            mana = 3;
+            attackMultiplier = 1;
         }
 
         public string GetName()
@@ -44,15 +50,51 @@ namespace Peliprojekti
             return status;
         }
 
+        public void SetStatus(Status value)
+        {
+            status = value;
+        }
+
+        public int GetMana()
+        {
+            return mana;
+        }
+
+        public void AddMana(int value)
+        {
+            mana += value;
+
+            mana = Math.Clamp(mana, 0, 3);
+        }
+
         public void Damage(int dmg)
         {
             hitPoints -= dmg;
 
-            if (hitPoints < 0)
+            if (hitPoints <= 0)
             {
                 hitPoints = 0;
                 status = Status.Dead;
             }
+            else if (hitPoints >= maxHealth)
+            {
+                hitPoints = maxHealth;
+            }
+        }
+
+        public void SetAttackMultiplier(float value)
+        {
+            attackMultiplier = value;
+        }
+
+        public float GetAttackMultiplier()
+        {
+            return attackMultiplier;
+        }
+
+        public int GetMaxHealth()
+        {
+            return maxHealth;
         }
     }
 }
