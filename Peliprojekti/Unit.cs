@@ -28,6 +28,11 @@ namespace Peliprojekti
             status = Status.Neutral;
             mana = 3;
             attackMultiplier = 1;
+
+            if (n == "random")
+            {
+                name = GetRandomName();
+            }
         }
 
         public string GetName()
@@ -95,6 +100,25 @@ namespace Peliprojekti
         public int GetMaxHealth()
         {
             return maxHealth;
+        }
+
+        string GetRandomName()
+        {
+            string[] nameList = File.ReadAllLines(Environment.CurrentDirectory + "/randomnames.txt");
+
+            Random r = new Random();
+            string randomName = "Jessey";
+            while(true)
+            {
+                randomName = nameList[r.Next(nameList.Length)];
+
+                if (randomName.Length == 6)
+                {
+                    break;
+                }
+            }
+
+            return randomName;
         }
     }
 }

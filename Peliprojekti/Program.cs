@@ -10,12 +10,12 @@ Spell charge = new Spell("Charge", 2);
 Spell[] spells = new Spell[] { shield, heal, blast, charge };
 
 Unit player = new Unit("Player", 5, 30);
-Unit ally1 = new Unit("Ally 1", 5, 15);
-Unit ally2 = new Unit("Ally 2", 5, 15);
+Unit ally1 = new Unit("random", 5, 15);
+Unit ally2 = new Unit("random", 5, 15);
 
-Unit enemy1 = new Unit("Enemy 1", 5, 15);
-Unit enemy2 = new Unit("Enemy 2", 5, 15);
-Unit enemy3 = new Unit("Enemy 3", 5, 15);
+Unit enemy1 = new Unit("random", 5, 15);
+Unit enemy2 = new Unit("random", 5, 15);
+Unit enemy3 = new Unit("random", 5, 15);
 
 Unit[] team1 = new Unit[] { player, ally1, ally2 };
 Unit[] team2 = new Unit[] { enemy1, enemy2, enemy3 };
@@ -52,7 +52,6 @@ while (true)
         Console.ForegroundColor = ConsoleColor.Magenta;
         Console.WriteLine("3: Magic");
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("4: Info");
 
         int input = GetInput();
 
@@ -75,7 +74,7 @@ while (true)
             while (true)
             {
                 Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine("\nWho will you attack?");
+                Console.WriteLine("Who will you attack?");
                 for (int i = 1; i <= team2.Length; i++)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -89,7 +88,22 @@ while (true)
                     Console.WriteLine(i + ": " + team2[i - 1].GetName());
                 }
 
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("X: Undo");
+
                 target = GetInput();
+
+                // Undo
+                if (target == -2)
+                {
+                    goto LoopEnd;
+                }
+                else if (target == -1)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Invalid input!");
+                    continue;
+                }
 
                 if (team2[target - 1].GetStatus() == Unit.Status.Dead)
                 {
@@ -104,21 +118,31 @@ while (true)
             }
 
             // Attack target
+            WriteStatus();
             Attack(player, team2[target - 1]);
             Thread.Sleep(750);
         }
         // Recharge
         else if (input == 2)
         {
+            WriteStatus();
             RechargeMana(player);
         }
         // Magic
         else if (input == 3)
         {
+            if (player.GetMana() == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("No mana! Cannot use magic!");
+                Thread.Sleep(750);
+                continue;
+            }
+
             while (true)
             {
                 Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine("\nWhich spell will you use?");
+                Console.WriteLine("Which spell will you use?");
                 for (int i = 1; i <= spells.Length; i++)
                 {
                     Console.ForegroundColor = ConsoleColor.Magenta;
@@ -132,10 +156,20 @@ while (true)
                     Console.WriteLine(i + ": " + spells[i - 1].GetName() + " (Cost: " + spells[i - 1].GetCost() + ")");
                 }
 
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("X: Undo");
+
                 int spell = GetInput();
+
+                // Undo
+                if (spell == -2)
+                {
+                    goto LoopEnd;
+                }
 
                 if ((spell <= spells.Length && spell > 0) && CanUseSpell(player, spells[spell - 1]))
                 {
+                    WriteStatus();
                     UseSpell(player, spells[spell - 1], team2);
                     break;
                 }
@@ -144,15 +178,6 @@ while (true)
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("Cannot use spell!");
                 }
-            }
-        }
-        // Info
-        else if (input == 4)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            foreach (Unit enemy in team2)
-            {
-                Console.WriteLine(enemy.GetName() + " has " + enemy.GetHitPoints() + " health and " + enemy.GetMana() + " mana.");
             }
         }
         else
@@ -164,6 +189,8 @@ while (true)
 
         break;
     }
+
+    Console.WriteLine();
 
     // Allies turn
     DoNPCActions(team1, team2);
@@ -184,6 +211,13 @@ while (true)
     {
         break;
     }
+
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine("Press any key to continue...");
+    Console.ReadKey(true);
+
+    LoopEnd:
+    Console.Clear();
 }
 
 Console.WriteLine("Game over!");
@@ -378,7 +412,10 @@ void DoNPCActions(Unit[] thisTeam, Unit[] enemyTeam)
         // Attack
         if (action == 1)
         {
-            int target = r.Next(enemyTeam.Length);
+            int target = DecideTarget(enemyTeam);
+
+            if (target == -1)
+                return;
 
             Attack(unit, enemyTeam[target]);
             Thread.Sleep(750);
@@ -393,6 +430,8 @@ void DoNPCActions(Unit[] thisTeam, Unit[] enemyTeam)
 
             UseSpell(unit, s, enemyTeam);
         }
+
+        Console.WriteLine();
     }
 }
 
@@ -400,7 +439,11 @@ int GetInput()
 {
     ConsoleKeyInfo key = Console.ReadKey(true);
 
-    if (char.IsDigit(key.KeyChar) == false)
+    if (key.KeyChar.Equals('x'))
+    {
+        return -2;
+    }
+    else if (char.IsDigit(key.KeyChar) == false)
     {
         return -1;
     }
@@ -414,11 +457,96 @@ void WriteStatus()
 
     Console.ForegroundColor = ConsoleColor.Gray;
     Console.WriteLine("\n---------------STATUS--------------\n");
+    // Ally status
     Console.ForegroundColor = ConsoleColor.Yellow;
     foreach (Unit ally in team1)
     {
         Console.WriteLine(ally.GetName() + ": | Health: (" + ally.GetHitPoints() + "/" + ally.GetMaxHealth() + ") | Mana: " + ally.GetMana());
     }
+    // Enemy status
+    Console.WriteLine();
+    Console.ForegroundColor = ConsoleColor.Red;
+    foreach (Unit enemy in team2)
+    {
+        Console.WriteLine(enemy.GetName() + ": | Health: " + GetVagueHealth(enemy) + " | Mana: " + GetVagueMana(enemy));
+    }
+
     Console.ForegroundColor = ConsoleColor.Gray;
-    Console.WriteLine("\n-----------------------------------");
+    Console.WriteLine("\n-----------------------------------\n");
+}
+
+int DecideTarget(Unit[] enemyTeam)
+{
+    int bestTarget = -1;
+
+    for (int i = 0; i < enemyTeam.Length; i++)
+    {
+        if (enemyTeam[i].GetStatus() == Unit.Status.Dead || enemyTeam[i].GetStatus() == Unit.Status.Shield)
+        {
+            continue;
+        }
+
+        // Pick target with most health
+        if (bestTarget == -1 || enemyTeam[bestTarget].GetHitPoints() < enemyTeam[i].GetHitPoints())
+        {
+            bestTarget = i;
+        }
+    }
+
+    return bestTarget;
+}
+
+string GetVagueHealth(Unit unit)
+{
+    int health = unit.GetHitPoints();
+    int maxHealth = unit.GetMaxHealth();
+
+    float healthToMaxRatio = (float)health / maxHealth;
+    string[] vagueHealth = { "Unknown" };
+
+
+    if (healthToMaxRatio > 0.75f)
+    {
+        vagueHealth = new string[]{ "Healthy", "Lively", "Strong", "Tough" };
+    }
+    else if (healthToMaxRatio > 0.5f)
+    {
+        vagueHealth = new string[] { "Damaged", "Scratched", "Bruised" };
+    }
+    else if (healthToMaxRatio > 0.25f)
+    {
+        vagueHealth = new string[] { "Injured", "Wounded", "Crushed" };
+    }
+    else
+    {
+        vagueHealth = new string[] { "Bleeding", "Barely standing", "Deformed" };
+    }
+
+    return vagueHealth[r.Next(vagueHealth.Length)];
+}
+
+string GetVagueMana(Unit unit)
+{
+    int mana = unit.GetMana();
+
+    string[] vagueMana = { "Unknown" };
+
+    if (mana == 3)
+    {
+        vagueMana = new string[] { "Strong", "Hefty", "Well", "Vogorous" };
+    }
+    else if (mana == 2)
+    {
+        vagueMana = new string[] { "Standard", "Usual", "Ordinary", "Habitual" };
+    }
+    else if (mana == 1)
+    {
+        vagueMana = new string[] { "Not so much", "Reduced", "Few", "Running low" };
+    }
+    else
+    {
+        vagueMana = new string[] { "Drained", "Void", "Removed" };
+    }
+
+    return vagueMana[r.Next(vagueMana.Length)]; ;
 }
