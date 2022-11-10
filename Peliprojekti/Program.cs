@@ -2,6 +2,7 @@
 using System.Threading;
 
 Random r = new Random();
+int turn = 1;
 
 Spell shield = new Spell("Shield", 1);
 Spell heal = new Spell("Heal", 1);
@@ -19,6 +20,12 @@ Unit enemy3 = new Unit("random", 5, 15);
 
 Unit[] team1 = new Unit[] { player, ally1, ally2 };
 Unit[] team2 = new Unit[] { enemy1, enemy2, enemy3 };
+
+
+List<Unit[][]> gameHistory = new List<Unit[][]>();
+
+// Add initial state to history
+WriteGameStateToHistory();
 
 Console.WriteLine("A battle is starting...");
 
@@ -51,6 +58,11 @@ while (true)
         Console.WriteLine("2: Recharge");
         Console.ForegroundColor = ConsoleColor.Magenta;
         Console.WriteLine("3: Magic");
+        if (turn > 1)
+        {
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine("X: Go to previous turn");
+        }
         Console.ForegroundColor = ConsoleColor.Yellow;
 
         int input = GetInput();
@@ -180,6 +192,17 @@ while (true)
                 }
             }
         }
+        // Undo
+        else if (input == -2)
+        {
+            if (turn == 1)
+            {
+                continue;
+            }
+
+            RollbackTurn();
+            goto LoopEnd;
+        }
         else
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -202,6 +225,15 @@ while (true)
 
     Console.ForegroundColor = ConsoleColor.Yellow;
     Console.WriteLine("\nEnemy's turn!\n");
+
+    Console.WriteLine("Press X to undo, any other key to continue\n");
+    // Undo turn
+    if (GetInput() == -2)
+    {
+        UndoTurn();
+        goto LoopEnd;
+    }
+
     Thread.Sleep(1000);
 
     // Enemy turn
@@ -213,10 +245,19 @@ while (true)
     }
 
     Console.ForegroundColor = ConsoleColor.Yellow;
-    Console.WriteLine("Press any key to continue...");
-    Console.ReadKey(true);
+    Console.WriteLine("Press X to undo, any other key to continue\n");
+    // Undo turn
+    if (GetInput() == -2)
+    {
+        UndoTurn();
+        goto LoopEnd;
+    }
 
-    LoopEnd:
+    // End turn
+    turn++;
+    WriteGameStateToHistory();
+
+LoopEnd:
     Console.Clear();
 }
 
@@ -456,7 +497,8 @@ void WriteStatus()
     Console.Clear();
 
     Console.ForegroundColor = ConsoleColor.Gray;
-    Console.WriteLine("\n---------------STATUS--------------\n");
+    Console.WriteLine("\nTurn " + turn);
+    Console.WriteLine("---------------STATUS--------------\n");
     // Ally status
     Console.ForegroundColor = ConsoleColor.Yellow;
     foreach (Unit ally in team1)
@@ -549,4 +591,62 @@ string GetVagueMana(Unit unit)
     }
 
     return vagueMana[r.Next(vagueMana.Length)]; ;
+}
+
+void UndoTurn()
+{
+    Unit[][] state = gameHistory[turn - 1];
+
+    Unit[] t1 = state[0];
+    for (int i = 0; i < t1.Length; i++)
+    {
+        team1[i].CopyUnit(t1[i]);
+    }
+
+    Unit[] t2 = state[1];
+    for (int i = 0; i < t2.Length; i++)
+    {
+        team2[i].CopyUnit(t2[i]);
+    }
+}
+
+void RollbackTurn()
+{
+    Unit[][] state = gameHistory[turn - 2];
+
+    Unit[] t1 = state[0];
+    for (int i = 0; i < t1.Length; i++)
+    {
+        team1[i].CopyUnit(t1[i]);
+    }
+
+    Unit[] t2 = state[1];
+    for (int i = 0; i < t2.Length; i++)
+    {
+        team2[i].CopyUnit(t2[i]);
+    }
+
+    if (gameHistory.Count >= turn)
+    {
+        gameHistory.RemoveAt(turn - 1);
+    }
+    turn--;
+}
+
+void WriteGameStateToHistory()
+{
+    Unit[] t1 = new Unit[team1.Length];
+    for (int i = 0; i < team1.Length; i++)
+    {
+        t1[i] = team1[i].Clone();
+    }
+
+    Unit[] t2 = new Unit[team2.Length];
+    for (int i = 0; i < team2.Length; i++)
+    {
+        t2[i] = team2[i].Clone();
+    }
+
+    Unit[][] teams = { t1, t2 };
+    gameHistory.Add(teams);
 }

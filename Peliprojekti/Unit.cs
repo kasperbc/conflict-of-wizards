@@ -120,5 +120,19 @@ namespace Peliprojekti
 
             return randomName;
         }
+
+        public void CopyUnit(Unit u)
+        {
+            hitPoints = u.GetHitPoints();
+            mana = u.GetMana();
+            status = u.GetStatus();
+        }
+
+        public Unit Clone()
+        {
+            Unit clone = new Unit(name, attackPower, hitPoints);
+
+            return clone;
+        }
     }
 }
