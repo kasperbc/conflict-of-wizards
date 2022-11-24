@@ -12,18 +12,21 @@ namespace Peliprojekti
 
         private Status status;
         private string name;
-        private int attackPower;
+        private UnitClass uClass;
+
         private float attackMultiplier;
         private int hitPoints;
-        private int maxHealth;
         private int mana;
 
-        public Unit(string n, int a, int h)
+        private bool isPlayer;
+
+        public Unit(string n, UnitClass c, bool p)
         {
             name = n;
-            attackPower = a;
-            hitPoints = h;
-            maxHealth = h;
+            uClass = c;
+            isPlayer = p;
+
+            hitPoints = c.GetMaxHealth();
 
             status = Status.Neutral;
             mana = 3;
@@ -35,6 +38,7 @@ namespace Peliprojekti
             }
         }
 
+
         public string GetName()
         {
             return name;
@@ -42,7 +46,7 @@ namespace Peliprojekti
 
         public int GetAttackPower()
         {
-            return attackPower;
+            return uClass.GetAttackPower();
         }
 
         public int GetHitPoints()
@@ -81,9 +85,9 @@ namespace Peliprojekti
                 hitPoints = 0;
                 status = Status.Dead;
             }
-            else if (hitPoints >= maxHealth)
+            else if (hitPoints >= uClass.GetMaxHealth())
             {
-                hitPoints = maxHealth;
+                hitPoints = uClass.GetMaxHealth();
             }
         }
 
@@ -99,7 +103,12 @@ namespace Peliprojekti
 
         public int GetMaxHealth()
         {
-            return maxHealth;
+            return uClass.GetMaxHealth();
+        }
+
+        public UnitClass.SpellBoost GetSpellBoost()
+        {
+            return uClass.GetSpellBoost();
         }
 
         string GetRandomName()
@@ -126,13 +135,25 @@ namespace Peliprojekti
             hitPoints = u.GetHitPoints();
             mana = u.GetMana();
             status = u.GetStatus();
+            isPlayer = u.IsPlayer();
+            uClass = u.GetUnitClass();
         }
 
         public Unit Clone()
         {
-            Unit clone = new Unit(name, attackPower, hitPoints);
+            Unit clone = new Unit(name, uClass, isPlayer);
 
             return clone;
+        }
+
+        public bool IsPlayer()
+        {
+            return isPlayer;
+        }
+
+        public UnitClass GetUnitClass()
+        {
+            return uClass;
         }
     }
 }
