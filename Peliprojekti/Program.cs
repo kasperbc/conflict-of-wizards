@@ -9,10 +9,10 @@ public class Program
     public static string playerName = "Player";
 
     public static UnitClass[] classes = { 
-        new UnitClass("Tank", "", h:40, a:3, b:UnitClass.SpellBoost.Shield, ConsoleColor.Gray),
-        new UnitClass("Healer", "", h:25, a:4, b:UnitClass.SpellBoost.Heal, ConsoleColor.Cyan),
-        new UnitClass("Explosion Mage", "", h:20, a:5, b:UnitClass.SpellBoost.Explosion, ConsoleColor.Red),
-        new UnitClass("Power Caster", "", h:15, a:6, b:UnitClass.SpellBoost.Charge, ConsoleColor.DarkYellow)};
+        new UnitClass("Tank", "A lot of health but low attack power!", h:40, a:3, b:UnitClass.SpellBoost.Shield, ConsoleColor.Gray),
+        new UnitClass("Healer", "Low max health and attack power, but has double healing!", h:25, a:4, b:UnitClass.SpellBoost.Heal, ConsoleColor.Cyan),
+        new UnitClass("Explosion Mage", "More powerful blasts!", h:20, a:5, b:UnitClass.SpellBoost.Explosion, ConsoleColor.Red),
+        new UnitClass("Power Caster", "Strong charge spells!", h:15, a:6, b:UnitClass.SpellBoost.Charge, ConsoleColor.DarkYellow) };
 
     public static void Main(string[] args)
     {
@@ -45,6 +45,7 @@ public class Program
 
         Console.Clear();
 
+
         Console.ForegroundColor = ConsoleColor.Gray;
         Console.WriteLine("ENTER YOUR NAME:");
         string n = Console.ReadLine();
@@ -62,7 +63,7 @@ public class Program
         {
             for (int i = 0; i < playerArmy.Length; i++)
             {
-                SelectRole(i);
+                SelectClass(i);
             }
 
             Console.Clear();
@@ -82,7 +83,7 @@ public class Program
 
         return GameState.Battle;
 
-        void SelectRole(int playerArmyIndex)
+        void SelectClass(int playerArmyIndex)
         {
             while (true)
             {
